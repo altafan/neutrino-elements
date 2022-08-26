@@ -3,13 +3,14 @@ package node
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	log "github.com/sirupsen/logrus"
 	"github.com/vulpemventures/neutrino-elements/pkg/peer"
 	"github.com/vulpemventures/neutrino-elements/pkg/protocol"
 	"github.com/vulpemventures/neutrino-elements/pkg/repository"
-	"time"
 )
 
 var zeroHash [32]byte = [32]byte{
@@ -39,9 +40,9 @@ func (n *node) synced(p peer.Peer) (bool, error) {
 		return false, err
 	}
 
-	log.Debugf("node: tipHasAllAncestors: %v", tipHasAllAncestors)
-	log.Debugf("node: chainTip: %v", chainTip.Height)
-	log.Debugf("node: PeersTip: %v", p.PeersTip())
+	log.Infof("node: tipHasAllAncestors: %v", tipHasAllAncestors)
+	log.Infof("node: chainTip: %v", chainTip.Height)
+	log.Infof("node: PeersTip: %v", p.PeersTip())
 
 	if chainTip.Height < p.PeersTip() {
 		return false, nil

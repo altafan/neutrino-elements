@@ -39,6 +39,7 @@ func NewElementsPeer(peerAddr string) (Peer, error) {
 	if err != nil {
 		return nil, err
 	}
+	conn.(*net.TCPConn).SetKeepAlive(true)
 
 	netAddress, err := protocol.ParseNodeAddr(peerAddr)
 	if err != nil {
