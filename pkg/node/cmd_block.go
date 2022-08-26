@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"github.com/vulpemventures/go-elements/block"
@@ -23,7 +22,6 @@ func (n node) handleBlock(header *protocol.MessageHeader, p peer.Peer) error {
 
 	lr := io.LimitReader(p.Connection(), int64(header.Length))
 	if err := binary.NewDecoder(lr).Decode(&msgBlock); err != nil {
-		fmt.Println("handleBlock", err)
 		return err
 	}
 

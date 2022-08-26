@@ -1,7 +1,6 @@
 package node
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/sirupsen/logrus"
@@ -16,7 +15,6 @@ func (n node) skipMessage(header *protocol.MessageHeader, p peer.Peer) error {
 
 	lr := io.LimitReader(p.Connection(), int64(header.Length))
 	if _, err := binary.NewDecoder(lr).ReadUntilEOF(); err != nil {
-		fmt.Println("skipMessage", err)
 		return err
 	}
 

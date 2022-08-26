@@ -17,7 +17,6 @@ func (n node) handleGetCFilters(header *protocol.MessageHeader, p peer.Peer) err
 	var getCFilters protocol.MsgGetCFilters
 	lr := io.LimitReader(p.Connection(), int64(header.Length))
 	if err := binary.NewDecoder(lr).Decode(&getCFilters); err != nil {
-		fmt.Println("handleGetCFilters", err)
 		return err
 	}
 

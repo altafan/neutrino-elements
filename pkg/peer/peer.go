@@ -68,7 +68,7 @@ func (e *elementsPeer) RecvMsg() (*protocol.MessageHeader, error) {
 	tmp := make([]byte, protocol.MsgHeaderLength)
 	nn, err := e.tcpConnection.Read(tmp)
 	if err != nil {
-		fmt.Println("READ ERR", errors.Is(err, net.ErrClosed))
+		fmt.Println("READ ERR", err, errors.Is(err, net.ErrClosed))
 		return nil, err
 	}
 
@@ -92,7 +92,7 @@ func (e *elementsPeer) SendMsg(msg *protocol.Message) error {
 
 	_, err = e.tcpConnection.Write(msgSerialized)
 	if err != nil {
-		fmt.Println("WRITE ERR", errors.Is(err, net.ErrClosed))
+		fmt.Println("WRITE ERR", err, errors.Is(err, net.ErrClosed))
 	}
 	return err
 }

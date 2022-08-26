@@ -16,7 +16,6 @@ func (n node) handleVersion(header *protocol.MessageHeader, p peer.Peer) error {
 	conn := p.Connection()
 	lr := io.LimitReader(conn, int64(header.Length))
 	if err := binary.NewDecoder(lr).Decode(&version); err != nil {
-		fmt.Println("handleVersion", err)
 		return err
 	}
 
