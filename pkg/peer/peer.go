@@ -40,8 +40,7 @@ func NewElementsPeer(peerAddr string) (Peer, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn.(*net.TCPConn).SetKeepAlive(true)
-	conn.(*net.TCPConn).SetKeepAlivePeriod(1 * time.Minute)
+	conn.SetDeadline(time.Unix(0, 0))
 
 	netAddress, err := protocol.ParseNodeAddr(peerAddr)
 	if err != nil {
