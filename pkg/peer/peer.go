@@ -40,7 +40,7 @@ func NewElementsPeer(peerAddr string) (Peer, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn.SetDeadline(time.Unix(0, 0))
+	conn.SetDeadline(time.Time{})
 
 	netAddress, err := protocol.ParseNodeAddr(peerAddr)
 	if err != nil {
