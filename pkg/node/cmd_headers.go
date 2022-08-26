@@ -2,10 +2,12 @@ package node
 
 import (
 	"context"
+	"fmt"
+	"io"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/vulpemventures/go-elements/block"
 	"github.com/vulpemventures/neutrino-elements/pkg/repository"
-	"io"
 
 	"github.com/vulpemventures/neutrino-elements/pkg/binary"
 	"github.com/vulpemventures/neutrino-elements/pkg/peer"
@@ -19,6 +21,7 @@ func (n node) handleHeaders(msgHeader *protocol.MessageHeader, p peer.Peer) erro
 	lr := io.LimitReader(conn, int64(msgHeader.Length))
 
 	if err := binary.NewDecoder(lr).Decode(&headers); err != nil {
+		fmt.Println("handleHeaders", err)
 		return err
 	}
 

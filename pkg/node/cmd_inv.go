@@ -1,6 +1,7 @@
 package node
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/vulpemventures/neutrino-elements/pkg/binary"
@@ -14,6 +15,7 @@ func (n node) handleInv(header *protocol.MessageHeader, p peer.Peer) error {
 	conn := p.Connection()
 	lr := io.LimitReader(conn, int64(header.Length))
 	if err := binary.NewDecoder(lr).Decode(&inv); err != nil {
+		fmt.Println("handleInv", err)
 		return err
 	}
 

@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"runtime/debug"
+	"sync"
+
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/vulpemventures/go-elements/block"
@@ -11,9 +15,6 @@ import (
 	"github.com/vulpemventures/neutrino-elements/pkg/peer"
 	"github.com/vulpemventures/neutrino-elements/pkg/protocol"
 	"github.com/vulpemventures/neutrino-elements/pkg/repository"
-	"io"
-	"runtime/debug"
-	"sync"
 )
 
 const (
@@ -293,6 +294,7 @@ func (n *node) sendMessage(conn io.Writer, msg *protocol.Message) error {
 	}
 
 	_, err = conn.Write(msgSerialized)
+	fmt.Println("sendMessage", err)
 	return err
 }
 

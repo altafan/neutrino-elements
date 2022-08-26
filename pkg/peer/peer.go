@@ -4,7 +4,6 @@ import (
 	"io"
 	"net"
 	"sync"
-	"time"
 
 	"github.com/vulpemventures/neutrino-elements/pkg/protocol"
 )
@@ -40,7 +39,6 @@ func NewElementsPeer(peerAddr string) (Peer, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn.SetDeadline(time.Time{})
 
 	netAddress, err := protocol.ParseNodeAddr(peerAddr)
 	if err != nil {

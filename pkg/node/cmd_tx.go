@@ -1,6 +1,7 @@
 package node
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/sirupsen/logrus"
@@ -14,6 +15,7 @@ func (n node) handleTx(header *protocol.MessageHeader, p peer.Peer) error {
 
 	lr := io.LimitReader(p.Connection(), int64(header.Length))
 	if err := binary.NewDecoder(lr).Decode(&tx); err != nil {
+		fmt.Println("handleTx", err)
 		return err
 	}
 

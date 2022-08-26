@@ -1,6 +1,7 @@
 package node
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/sirupsen/logrus"
@@ -13,6 +14,7 @@ func (n node) handleSendCmpct(header *protocol.MessageHeader, p peer.Peer) error
 	var sendCmpct protocol.MsgSendCmpct
 	lr := io.LimitReader(p.Connection(), int64(header.Length))
 	if err := binary.NewDecoder(lr).Decode(&sendCmpct); err != nil {
+		fmt.Println("handleSendCmpct", err)
 		return err
 	}
 

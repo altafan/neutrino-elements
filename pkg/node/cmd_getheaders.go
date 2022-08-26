@@ -1,6 +1,7 @@
 package node
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/sirupsen/logrus"
@@ -13,6 +14,7 @@ func (n node) handleGetHeaders(header *protocol.MessageHeader, p peer.Peer) erro
 	var getHeaders protocol.MsgGetHeaders
 	lr := io.LimitReader(p.Connection(), int64(header.Length))
 	if err := binary.NewDecoder(lr).Decode(&getHeaders); err != nil {
+		fmt.Println("handleGetHeaders", err)
 		return err
 	}
 

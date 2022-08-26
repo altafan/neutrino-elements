@@ -2,8 +2,10 @@ package node
 
 import (
 	"context"
-	"github.com/vulpemventures/go-elements/block"
+	"fmt"
 	"io"
+
+	"github.com/vulpemventures/go-elements/block"
 
 	"github.com/vulpemventures/neutrino-elements/pkg/binary"
 	"github.com/vulpemventures/neutrino-elements/pkg/peer"
@@ -21,6 +23,7 @@ func (n node) handleBlock(header *protocol.MessageHeader, p peer.Peer) error {
 
 	lr := io.LimitReader(p.Connection(), int64(header.Length))
 	if err := binary.NewDecoder(lr).Decode(&msgBlock); err != nil {
+		fmt.Println("handleBlock", err)
 		return err
 	}
 
