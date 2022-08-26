@@ -8,6 +8,7 @@ import (
 	"net"
 	"sync"
 
+	"github.com/sirupsen/logrus"
 	"github.com/vulpemventures/neutrino-elements/pkg/binary"
 	"github.com/vulpemventures/neutrino-elements/pkg/protocol"
 )
@@ -34,6 +35,7 @@ type Peer interface {
 }
 
 type elementsPeer struct {
+	peerAddr         string
 	networkAddress   *protocol.Addr
 	tcpConnection    net.Conn
 	startBlockHeight uint32
@@ -54,6 +56,7 @@ func NewElementsPeer(peerAddr string) (Peer, error) {
 	}
 
 	return &elementsPeer{
+		peerAddr:       peerAddr,
 		networkAddress: netAddress,
 		tcpConnection:  conn,
 		m:              new(sync.RWMutex),
@@ -68,7 +71,15 @@ func (e *elementsPeer) RecvMsg() (*protocol.MessageHeader, error) {
 	tmp := make([]byte, protocol.MsgHeaderLength)
 	nn, err := e.tcpConnection.Read(tmp)
 	if err != nil {
-		fmt.Println("READ ERR", err, errors.Is(err, net.ErrClosed))
+		if errors.Is(err, net.ErrClosed) {
+			logrus.Debugf("connection to peer %s closed, reconnecting...")
+			conn, err := net.Dial("tcp", e.peerAddr)
+			if err != nil {
+				return nil, err
+			}
+			e.tcpConnection = conn
+			return e.RecvMsg()
+		}
 		return nil, err
 	}
 
@@ -92,7 +103,15 @@ func (e *elementsPeer) SendMsg(msg *protocol.Message) error {
 
 	_, err = e.tcpConnection.Write(msgSerialized)
 	if err != nil {
-		fmt.Println("WRITE ERR", err, errors.Is(err, net.ErrClosed))
+		if errors.Is(err, net.ErrClosed) {
+			logrus.Debugf("connection to peer %s closed, reconnecting...")
+			conn, err := net.Dial("tcp", e.peerAddr)
+			if err != nil {
+				return err
+			}
+			e.tcpConnection = conn
+			return e.SendMsg(msg)
+		}
 	}
 	return err
 }
