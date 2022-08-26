@@ -76,7 +76,7 @@ func (n node) handleGetCFilters(header *protocol.MessageHeader, p peer.Peer) err
 			continue
 		}
 
-		if err := n.sendMessage(p.Connection(), msgCFilter); err != nil {
+		if err := p.SendMsg(msgCFilter); err != nil {
 			logrus.Error(err)
 			continue
 		}

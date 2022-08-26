@@ -30,7 +30,7 @@ func (n node) handleVersion(header *protocol.MessageHeader, p peer.Peer) error {
 		return err
 	}
 
-	if err := n.sendMessage(conn, verack); err != nil {
+	if err := p.SendMsg(verack); err != nil {
 		return err
 	}
 
@@ -40,7 +40,7 @@ func (n node) handleVersion(header *protocol.MessageHeader, p peer.Peer) error {
 		return err
 	}
 
-	if err := n.sendMessage(conn, sendHeaders); err != nil {
+	if err := p.SendMsg(sendHeaders); err != nil {
 		return err
 	}
 

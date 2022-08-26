@@ -1,10 +1,14 @@
 package peer
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"io"
 	"net"
 	"sync"
 
+	"github.com/vulpemventures/neutrino-elements/pkg/binary"
 	"github.com/vulpemventures/neutrino-elements/pkg/protocol"
 )
 
@@ -17,6 +21,10 @@ type Peer interface {
 	ID() PeerID
 	// Connection returns peer connection, using to send and receive Elements messages.
 	Connection() io.ReadWriteCloser
+	// RecvMsg returns message header received from peer
+	RecvMsg() (*protocol.MessageHeader, error)
+	// SendMsg sends a msg to peer
+	SendMsg(msg *protocol.Message) error
 	// Addr returns the Network Address of the peer
 	Addr() *protocol.Addr
 	// PeersTip returns current tip block height
@@ -54,6 +62,39 @@ func NewElementsPeer(peerAddr string) (Peer, error) {
 
 func (e *elementsPeer) ID() PeerID {
 	return PeerID(e.tcpConnection.LocalAddr().String())
+}
+
+func (e *elementsPeer) RecvMsg() (*protocol.MessageHeader, error) {
+	tmp := make([]byte, protocol.MsgHeaderLength)
+	nn, err := e.tcpConnection.Read(tmp)
+	if err != nil {
+		fmt.Println("READ ERR", errors.Is(err, net.ErrClosed))
+		return nil, err
+	}
+
+	var msgHeader protocol.MessageHeader
+	if err := binary.NewDecoder(bytes.NewReader(tmp[:nn])).Decode(&msgHeader); err != nil {
+		return nil, fmt.Errorf("failed to decode header: %+v", err)
+	}
+
+	if err := msgHeader.Validate(); err != nil {
+		return nil, fmt.Errorf("failed to validate header: %+v", err)
+	}
+
+	return &msgHeader, nil
+}
+
+func (e *elementsPeer) SendMsg(msg *protocol.Message) error {
+	msgSerialized, err := binary.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = e.tcpConnection.Write(msgSerialized)
+	if err != nil {
+		fmt.Println("WRITE ERR", errors.Is(err, net.ErrClosed))
+	}
+	return err
 }
 
 func (e *elementsPeer) Connection() io.ReadWriteCloser {

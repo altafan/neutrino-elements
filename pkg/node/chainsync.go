@@ -86,7 +86,7 @@ func (n *node) syncWithPeer(peerID peer.PeerID) error {
 	}
 
 	log.Debugf("sending getheaders to p %s", peerID)
-	if err := n.sendMessage(p.Connection(), msg); err != nil {
+	if err := p.SendMsg(msg); err != nil {
 		return err
 	}
 

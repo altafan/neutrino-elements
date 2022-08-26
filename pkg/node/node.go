@@ -1,17 +1,14 @@
 package node
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"runtime/debug"
 	"sync"
 
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/vulpemventures/go-elements/block"
-	"github.com/vulpemventures/neutrino-elements/pkg/binary"
 	"github.com/vulpemventures/neutrino-elements/pkg/peer"
 	"github.com/vulpemventures/neutrino-elements/pkg/protocol"
 	"github.com/vulpemventures/neutrino-elements/pkg/repository"
@@ -107,7 +104,7 @@ func (n node) AddOutboundPeer(outbound peer.Peer) error {
 		return err
 	}
 
-	err = n.sendMessage(outbound.Connection(), msgVersion)
+	err = outbound.SendMsg(msgVersion)
 	if err != nil {
 		return err
 	}
@@ -171,94 +168,80 @@ func (n *node) handlePeerMessages(p peer.Peer) {
 		}
 	}()
 
-	tmp := make([]byte, protocol.MsgHeaderLength)
-	conn := p.Connection()
-
 Loop:
 	for {
-		nn, err := conn.Read(tmp)
+		msgHeader, err := p.RecvMsg()
 		if err != nil {
 			logrus.Errorf(err.Error())
 			n.DisconCh <- p.ID()
 			break Loop
 		}
 
-		var msgHeader protocol.MessageHeader
-		if err := binary.NewDecoder(bytes.NewReader(tmp[:nn])).Decode(&msgHeader); err != nil {
-			logrus.Debugf("decoding header failed: %+v", err)
-			continue
-		}
-
-		if err := msgHeader.Validate(); err != nil {
-			logrus.Debugf("validate header failed: %+v", err)
-			continue
-		}
-
 		logrus.Debugf("received message: %s", msgHeader.Command)
 
 		switch msgHeader.CommandString() {
 		case "version":
-			if err := n.handleVersion(&msgHeader, p); err != nil {
+			if err := n.handleVersion(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'version': %+v", err)
 				continue
 			}
 		case "verack":
-			if err := n.handleVerack(&msgHeader, p); err != nil {
+			if err := n.handleVerack(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'verack': %+v", err)
 				continue
 			}
 		case "ping":
-			if err := n.handlePing(&msgHeader, p); err != nil {
+			if err := n.handlePing(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'ping': %+v", err)
 				continue
 			}
 		case "pong":
-			if err := n.handlePong(&msgHeader, p); err != nil {
+			if err := n.handlePong(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'pong': %+v", err)
 				continue
 			}
 		case "inv":
-			if err := n.handleInv(&msgHeader, p); err != nil {
+			if err := n.handleInv(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'inv': %+v", err)
 				continue
 			}
 		case "tx":
-			if err := n.handleTx(&msgHeader, p); err != nil {
+			if err := n.handleTx(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'tx': %+v", err)
 				continue
 			}
 		case "block":
-			if err := n.handleBlock(&msgHeader, p); err != nil {
+			if err := n.handleBlock(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'block': %+v", err)
 				continue
 			}
 		case "sendcmpct":
-			if err := n.handleSendCmpct(&msgHeader, p); err != nil {
+			if err := n.handleSendCmpct(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'sendcmpct': %+v", err)
 				continue
 			}
 		case "getheaders":
-			if err := n.handleGetHeaders(&msgHeader, p); err != nil {
+			if err := n.handleGetHeaders(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'getheaders': %+v", err)
 				continue
 			}
 		case "headers":
-			if err := n.handleHeaders(&msgHeader, p); err != nil {
+			if err := n.handleHeaders(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'headers': %+v", err)
 				continue
 			}
 		case "cfilter":
-			if err := n.handleCFilter(&msgHeader, p); err != nil {
+			if err := n.handleCFilter(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'cfilter': %+v", err)
 				continue
 			}
 		case "getcfilters":
-			if err := n.handleGetCFilters(&msgHeader, p); err != nil {
+			if err := n.handleGetCFilters(msgHeader, p); err != nil {
 				logrus.Errorf("failed to handle 'getcfilters': %+v", err)
 				continue
 			}
 		default:
-			if err := n.skipMessage(&msgHeader, p); err != nil {
+			if err := n.skipMessage(msgHeader, p); err != nil {
 				logrus.Errorf("failed to skip message: %+v", err)
 				continue
 			}
@@ -283,19 +266,6 @@ func (n *node) createNodeVersionMsg(p peer.Peer) (*protocol.Message, error) {
 		peerAddr.Port,
 		n.getServicesFlag(),
 	)
-}
-
-// sendMessage first Marshal the `msg` arg and then use the `conn` to send it.
-func (n *node) sendMessage(conn io.Writer, msg *protocol.Message) error {
-	logrus.Debugf("node sends message: %s", msg.CommandString())
-	msgSerialized, err := binary.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
-	_, err = conn.Write(msgSerialized)
-	fmt.Println("sendMessage", err)
-	return err
 }
 
 // on disconnect, remove the peer from the node.
@@ -346,8 +316,7 @@ func (n *node) monitorBlockHeaders() {
 					continue
 				}
 
-				conn := n.getBestPeerForSync().Connection()
-				err = n.sendMessage(conn, msg)
+				err = n.getBestPeerForSync().SendMsg(msg)
 				if err != nil {
 					logrus.Error(err)
 					continue
@@ -394,7 +363,7 @@ func (n *node) SendTransaction(txhex string) error {
 	}
 
 	for _, peer := range n.Peers {
-		err = n.sendMessage(peer.Connection(), msg)
+		err = peer.SendMsg(msg)
 		if err != nil {
 			return err
 		}
