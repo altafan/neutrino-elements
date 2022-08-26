@@ -4,6 +4,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/vulpemventures/neutrino-elements/pkg/protocol"
 )
@@ -40,6 +41,7 @@ func NewElementsPeer(peerAddr string) (Peer, error) {
 		return nil, err
 	}
 	conn.(*net.TCPConn).SetKeepAlive(true)
+	conn.(*net.TCPConn).SetKeepAlivePeriod(1 * time.Minute)
 
 	netAddress, err := protocol.ParseNodeAddr(peerAddr)
 	if err != nil {
