@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	pingIntervalSec = 120
+	pingIntervalSec = 60
 	pingTimeoutSec  = 60
 )
 

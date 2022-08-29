@@ -72,13 +72,13 @@ func (e *elementsPeer) RecvMsg() (*protocol.MessageHeader, error) {
 	nn, err := e.tcpConnection.Read(tmp)
 	if err != nil {
 		if errors.Is(err, net.ErrClosed) {
-			logrus.Debugf("connection to peer %s closed, reconnecting...")
-			conn, err := net.Dial("tcp", e.peerAddr)
-			if err != nil {
-				return nil, err
-			}
-			e.tcpConnection = conn
-			return e.RecvMsg()
+			logrus.Debugf("READ connection to peer %s closed", e.ID())
+			// conn, err := net.Dial("tcp", e.peerAddr)
+			// if err != nil {
+			// 	return nil, err
+			// }
+			// e.tcpConnection = conn
+			// return e.RecvMsg()
 		}
 		return nil, err
 	}
@@ -104,13 +104,13 @@ func (e *elementsPeer) SendMsg(msg *protocol.Message) error {
 	_, err = e.tcpConnection.Write(msgSerialized)
 	if err != nil {
 		if errors.Is(err, net.ErrClosed) {
-			logrus.Debugf("connection to peer %s closed, reconnecting...")
-			conn, err := net.Dial("tcp", e.peerAddr)
-			if err != nil {
-				return err
-			}
-			e.tcpConnection = conn
-			return e.SendMsg(msg)
+			logrus.Debugf("WRITE connection to peer %s closed!", e.ID())
+			// conn, err := net.Dial("tcp", e.peerAddr)
+			// if err != nil {
+			// 	return err
+			// }
+			// e.tcpConnection = conn
+			// return e.SendMsg(msg)
 		}
 	}
 	return err
