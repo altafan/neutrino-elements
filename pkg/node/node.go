@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime/debug"
 	"sync"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -246,7 +247,7 @@ Loop:
 				continue
 			}
 		}
-
+		time.Sleep(time.Millisecond)
 	}
 }
 
